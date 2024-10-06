@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     // Define variables
-                    def containerName = 'node-calculator-app-container-two'
+                    def containerName = 'node-calculator-app-container-three'
                     def containerPort = '3000'
                     def hostPort = '3000'
 

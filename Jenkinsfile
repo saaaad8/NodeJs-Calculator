@@ -31,10 +31,26 @@ pipeline {
 
         stage('Deploy on EC2') {
             steps {
-                // Stop any running containers using the previous image
-                sh 'docker stop $(docker ps -q --filter ancestor=saaddocker419/node-calc:latest) || true'
-                // Run the new container on port 3000
-                sh 'docker run -d -p 3000:3000 saaddocker419/node-calc:latest'
+                script {
+                    // Define variables
+                    def containerName = 'node-calculator-app-container'
+                    def containerPort = '3000'
+                    def hostPort = '3000'
+
+                    // Check if a container with the same name exists
+                    def existingContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
+
+                    // If a container exists, stop and remove it
+                    if (existingContainer) {
+                        echo "Stopping and removing existing container: ${containerName}"
+                        sh "docker stop ${existingContainer}"
+                        sh "docker rm ${existingContainer}"
+                    }
+
+                    // Run the new container
+                    echo "Starting new container: ${containerName}"
+                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
+                }
             }
         }
     }

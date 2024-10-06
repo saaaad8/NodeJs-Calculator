@@ -29,29 +29,35 @@ pipeline {
             }
         }
 
-        stage('Deploy on EC2') {
-            steps {
-                script {
-                    // Define variables
-                    def containerName = 'node-calculator-app-container'
-                    def containerPort = '3000'
-                    def hostPort = '3000'
+       stage('Deploy on EC2') {
+    steps {
+        script {
+            // Define variables
+            def containerName = 'node-calculator-app-container'
+            def containerPort = '3000'
+            def hostPort = '3000'
 
-                    // Check if a container with the same name exists
-                    def existingContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
-
-                    // If a container exists, stop and remove it
-                    if (existingContainer) {
-                        echo "Stopping and removing existing container: ${containerName}"
-                        sh "docker stop ${existingContainer}"
-                        sh "docker rm ${existingContainer}"
-                    }
-
-                    // Run the new container
-                    echo "Starting new container: ${containerName}"
-                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
-                }
+            // Stop and remove any running container using the same port
+            echo "Stopping any containers using port ${hostPort}"
+            def existingPortContainer = sh(script: "docker ps -q --filter 'expose=${hostPort}'", returnStdout: true).trim()
+            if (existingPortContainer) {
+                echo "Stopping container using port ${hostPort}"
+                sh "docker stop ${existingPortContainer}"
+                sh "docker rm ${existingPortContainer}"
             }
+
+            // Stop and remove any previous container with the same name
+            echo "Stopping any existing containers with name: ${containerName}"
+            def existingContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
+            if (existingContainer) {
+                echo "Stopping and removing container: ${containerName}"
+                sh "docker stop ${existingContainer}"
+                sh "docker rm ${existingContainer}"
+            }
+
+            // Run the new container
+            echo "Starting new container: ${containerName} on port ${hostPort}"
+            sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
         }
     }
 }

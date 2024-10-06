@@ -37,12 +37,12 @@ body {
     font-size: 1.5rem;
     padding: 15px;
     border: none;
-    background-color: #007bff;
+    background-color: #df5d0c;
     color: white;
     border-radius: 5px;
     cursor: pointer;
 }
 
 .btn:hover {
-    background-color: #0056b3;
+    background-color: #9e4903;
 }

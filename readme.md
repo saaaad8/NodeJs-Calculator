@@ -158,7 +158,6 @@ The Docker image for this project is available on Docker Hub:
 
 - Add more arithmetic operations and scientific functions
 - Implement unit tests for the calculator
-- Use Nginx as a reverse proxy for better scalability
 
 ## License
 

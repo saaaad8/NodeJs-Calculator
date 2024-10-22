@@ -1,20 +1,31 @@
-# 1. Use an official Node.js runtime as the base image
-FROM node:18-alpine
+# First stage: Build stage
+FROM node:18-alpine AS build
 
-# 2. Set the working directory inside the container
+# Set working directory
 WORKDIR /usr/src/app
 
-# 3. Copy the package.json and package-lock.json to install dependencies
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# 4. Install dependencies
+# Install production dependencies
 RUN npm install --production
 
-# 5. Copy the rest of the application source code to the working directory
+# Copy the entire source code to the build stage
 COPY . .
 
-# 6. Expose the port your app will run on (typically 3000 for Node.js apps)
+##################################################
+
+# Second stage: Distroless runtime stage
+FROM gcr.io/distroless/nodejs:18
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy only necessary files from build stage
+COPY --from=build /usr/src/app .
+
+# Expose the application port
 EXPOSE 3000
 
-# 7. Define the command to start the app
-CMD [ "npm", "start" ]
+# Start the app
+CMD ["node", "server.js"]

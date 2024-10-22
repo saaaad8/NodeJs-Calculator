@@ -1,31 +1,20 @@
-# First stage: Build stage
-FROM node:18-alpine AS build
+# 1. Use an official Node.js runtime as the base image
+FROM node:18-alpine
 
-# Set working directory
+# 2. Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# 3. Copy the package.json and package-lock.json to install dependencies
 COPY package*.json ./
 
-# Install production dependencies
+# 4. Install dependencies
 RUN npm install --production
 
-# Copy the entire source code to the build stage
+# 5. Copy the rest of the application source code to the working directory
 COPY . .
 
-##################################################
-
-# Second stage: Distroless runtime stage
-FROM gcr.io/distroless/nodejs:18
-
-# Set working directory
-WORKDIR /usr/src/app
-
-# Copy only necessary files from build stage
-COPY --from=build /usr/src/app .
-
-# Expose the application port
+# 6. Expose the port your app will run on (typically 3000 for Node.js apps)
 EXPOSE 3000
 
-# Start the app
-CMD ["node", "server.js"]
+# 7. Define the command to start the app
+CMD [ "npm", "start" ]

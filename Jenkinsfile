@@ -37,27 +37,9 @@ pipeline {
                     def containerPort = '3000'
                     def hostPort = '3000'
 
-                    // Stop and remove any running container using the same port
-                    echo "Stopping any containers using port ${hostPort}"
-                    def existingPortContainer = bat(script: "docker ps -q --filter \"expose=${hostPort}\"", returnStdout: true).trim()
-                    if (existingPortContainer) {
-                        echo "Stopping container using port ${hostPort}"
-                        bat "docker stop ${existingPortContainer} || true"
-                        bat "docker rm ${existingPortContainer} || true"
-                    }
-
-                    // Stop and remove any previous container with the same name
-                    echo "Stopping any existing containers with name: ${containerName}"
-                    def existingContainer = bat(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
-                    if (existingContainer) {
-                        echo "Stopping and removing container: ${containerName}"
-                        bat "docker stop ${existingContainer} || true"
-                        bat "docker rm ${existingContainer} || true"
-                    }
-
-                    // Run the new container
+                    // Run the new container directly
                     echo "Starting new container: ${containerName} on port ${hostPort}"
-                    bat "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
+                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
                 }
             }
         }

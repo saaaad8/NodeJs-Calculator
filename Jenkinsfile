@@ -29,7 +29,7 @@ pipeline {
             }
         }
 
-        stage('Deploy on EC2') {
+        stage('Run Docker Container Locally') {
             steps {
                 script {
                     // Define variables
@@ -63,4 +63,3 @@ pipeline {
         }
     }
 }
-

@@ -29,12 +29,38 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container Locally') {
+        stage('Deploy on EC2') {
             steps {
                 script {
-                    bat 'docker run -d -p 3000:3000 --name node-calculator-app-container saaddocker419/node-calc:latest'
+                    // Define variables
+                    def containerName = 'node-calculator-app-container-two'
+                    def containerPort = '3000'
+                    def hostPort = '3000'
+
+                    // Stop and remove any running container using the same port
+                    echo "Stopping any containers using port ${hostPort}"
+                    def existingPortContainer = sh(script: "docker ps -q --filter 'expose=${hostPort}'", returnStdout: true).trim()
+                    if (existingPortContainer) {
+                        echo "Stopping container using port ${hostPort}"
+                        sh "docker stop ${existingPortContainer} || true"
+                        sh "docker rm ${existingPortContainer} || true"
+                    }
+
+                    // Stop and remove any previous container with the same name
+                    echo "Stopping any existing containers with name: ${containerName}"
+                    def existingContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
+                    if (existingContainer) {
+                        echo "Stopping and removing container: ${containerName}"
+                        sh "docker stop ${existingContainer} || true"
+                        sh "docker rm ${existingContainer} || true"
+                    }
+
+                    // Run the new container
+                    echo "Starting new container: ${containerName} on port ${hostPort}"
+                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
                 }
             }
         }
     }
 }
+

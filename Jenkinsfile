@@ -32,14 +32,7 @@ pipeline {
         stage('Run Docker Container Locally') {
             steps {
                 script {
-                    // Define variables
-                    def containerName = 'node-calculator-app-container'
-                    def containerPort = '3000'
-                    def hostPort = '3000'
-
-                    // Run the new container directly
-                    echo "Starting new container: ${containerName} on port ${hostPort}"
-                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
+                    bat 'docker run -d -p 3000:3000 --name node-calculator-app-container saaddocker419/node-calc:latest'
                 }
             }
         }

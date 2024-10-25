@@ -52,7 +52,7 @@ pipeline {
         always {
             echo "Cleaning up any unused Docker resources..."
             // Clean up unused Docker resources on Windows
-            powershell 'docker system prune -f || Write-Output "No resources to prune"'
+            powershell 'docker system prune -f'
         }
         success {
             echo "Deployment successful!"

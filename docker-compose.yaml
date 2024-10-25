@@ -1,1 +1,12 @@
+version: '3.8'
 
+services:
+  node-app:
+    build:
+      context: .  # Builds from the current directory where Dockerfile is located
+    image: saaddocker419/node-calc:latest  # Tag the image for Docker Hub
+    ports:
+      - "3000:3000"  # Exposes the app on localhost:3000
+    environment:
+      - NODE_ENV=production  # Sets the environment to production
+    command: "node server.js"  # Command to run the Node.js app

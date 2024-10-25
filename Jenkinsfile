@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'saaddocker419/node-calc:latest'  // Define the Docker image name
+        DOCKER_HUB_CREDENTIALS = 'docker-jenkins'  // Docker Hub credentials in Jenkins
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -11,8 +16,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Tag the image with your Docker Hub username and repository name
-                    docker.build('saaddocker419/node-calc:latest')
+                    // Build the Docker image with a tag
+                    docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
@@ -20,21 +25,40 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Use the Docker Hub credentials stored in Jenkins
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-jenkins') {
-                        // Push the image to your Docker Hub repository
-                        docker.image('saaddocker419/node-calc:latest').push()
+                    // Login to Docker Hub and push the image
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_HUB_CREDENTIALS}") {
+                        docker.image("${DOCKER_IMAGE}").push()
                     }
                 }
             }
         }
 
-        stage('Run Docker Container Locally') {
+        stage('Deploy on Windows') {
             steps {
                 script {
-                    bat 'docker run -d -p 3000:3000 --name node-calculator-app-container saaddocker419/node-calc:latest'
+                    echo "Deploying on Windows using Docker Compose"
+                    
+                    // Stop any previous containers
+                    powershell 'docker-compose down || Write-Output "No containers to stop"'
+
+                    // Start services with Docker Compose
+                    powershell 'docker-compose up -d'
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up any unused Docker resources..."
+            // Clean up unused Docker resources on Windows
+            powershell 'docker system prune -f || Write-Output "No resources to prune"'
+        }
+        success {
+            echo "Deployment successful!"
+        }
+        failure {
+            echo "Deployment failed."
         }
     }
 }

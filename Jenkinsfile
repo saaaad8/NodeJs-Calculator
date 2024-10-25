@@ -39,7 +39,7 @@ pipeline {
                     echo "Deploying on Windows using Docker Compose"
                     
                     // Stop any previous containers
-                    powershell 'docker-compose down || Write-Output "No containers to stop"'
+                    powershell 'docker-compose down'
 
                     // Start services with Docker Compose
                     powershell 'docker-compose up -d'

@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'saaddocker419/node-calc:latest'  // Define the Docker image name
+        DOCKER_HUB_CREDENTIALS = 'docker-jenkins'  // Docker Hub credentials in Jenkins
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -11,8 +16,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Tag the image with your Docker Hub username and repository name
-                    docker.build('saaddocker419/node-calc:latest')
+                    // Build the Docker image with a tag
+                    docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
@@ -20,10 +25,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Use the Docker Hub credentials stored in Jenkins
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-jenkins') {
-                        // Push the image to your Docker Hub repository
-                        docker.image('saaddocker419/node-calc:latest').push()
+                    // Login to Docker Hub and push the image
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_HUB_CREDENTIALS}") {
+                        docker.image("${DOCKER_IMAGE}").push()
                     }
                 }
             }
@@ -32,35 +36,28 @@ pipeline {
         stage('Deploy on EC2') {
             steps {
                 script {
-                    // Define variables
-                    def containerName = 'node-calculator-app-container-two'
-                    def containerPort = '3000'
-                    def hostPort = '3000'
+                    echo "Deploying on EC2 using Docker Compose"
+                    
+                    // Ensure any previous containers are taken down
+                    sh 'docker-compose down || true'  // Runs even if there are no existing containers
 
-                    // Stop and remove any running container using the same port
-                    echo "Stopping any containers using port ${hostPort}"
-                    def existingPortContainer = sh(script: "docker ps -q --filter 'expose=${hostPort}'", returnStdout: true).trim()
-                    if (existingPortContainer) {
-                        echo "Stopping container using port ${hostPort}"
-                        sh "docker stop ${existingPortContainer} || true"
-                        sh "docker rm ${existingPortContainer} || true"
-                    }
-
-                    // Stop and remove any previous container with the same name
-                    echo "Stopping any existing containers with name: ${containerName}"
-                    def existingContainer = sh(script: "docker ps -q -f name=${containerName}", returnStdout: true).trim()
-                    if (existingContainer) {
-                        echo "Stopping and removing container: ${containerName}"
-                        sh "docker stop ${existingContainer} || true"
-                        sh "docker rm ${existingContainer} || true"
-                    }
-
-                    // Run the new container
-                    echo "Starting new container: ${containerName} on port ${hostPort}"
-                    sh "docker run -d --name ${containerName} -p ${hostPort}:${containerPort} saaddocker419/node-calc:latest"
+                    // Start services with Docker Compose
+                    sh 'docker-compose up -d'
                 }
             }
         }
     }
-}
 
+    post {
+        always {
+            echo "Cleaning up any unused Docker resources..."
+            sh 'docker system prune -f || true'  // Clean up unused Docker resources
+        }
+        success {
+            echo "Deployment successful!"
+        }
+        failure {
+            echo "Deployment failed."
+        }
+    }
+}
